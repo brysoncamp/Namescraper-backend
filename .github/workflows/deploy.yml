@@ -1,0 +1,55 @@
+name: Deploy to AWS Lambda
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the latest code from the repo
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Deploy the UserRequestLambda function
+      - name: Install dependencies for UserRequestLambda
+        run: |
+          cd UserRequestLambda
+          npm install openai
+
+      - name: Zip UserRequestLambda function
+        run: |
+          cd UserRequestLambda
+          zip -r ../UserRequestLambda.zip .
+
+      - name: Deploy UserRequestLambda to AWS
+        uses: aws-actions/aws-lambda-deploy@v1.0.1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: ${{ secrets.AWS_REGION }}
+          function-name: ${{ secrets.LAMBDA_FUNCTION_NAME }}
+          zip-file: UserRequestLambda.zip
+
+      # Deploy the QueueProcessingLambda function
+      - name: Install dependencies for QueueProcessingLambda
+        run: |
+          cd QueueProcessingLambda
+          npm install
+
+      - name: Zip QueueProcessingLambda function
+        run: |
+          cd QueueProcessingLambda
+          zip -r ../QueueProcessingLambda.zip .
+
+      - name: Deploy QueueProcessingLambda to AWS
+        uses: aws-actions/aws-lambda-deploy@v1.0.1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: ${{ secrets.AWS_REGION }}
+          function-name: ${{ secrets.LAMBDA_FUNCTION_NAME_2 }}
+          zip-file: QueueProcessingLambda.zip

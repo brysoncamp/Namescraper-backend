@@ -24,8 +24,11 @@ const getSecrets = async () => {
 export const handler = async (event) => {
   console.log("Received event:", JSON.stringify(event, null, 2));
 
-  const { action, prompt } = event;
+  // Extract connectionId from requestContext
+  const connectionId = event.requestContext?.connectionId;
 
+  // Parse the body to extract action and prompt
+  const { action, prompt } = JSON.parse(event.body);
   try {
     // Retrieve secrets if not already loaded
     await getSecrets();
@@ -56,7 +59,7 @@ export const handler = async (event) => {
         {
           role: "system",
           content:
-            "Generate 500 quality domain names (without TLD) for the prompt. 10 character max. Do not be verbose.",
+            "Generate 50 quality domain names (without TLD) for the prompt. 10 character max. Do not be verbose.",
         },
         { role: "user", content: prompt },
       ],

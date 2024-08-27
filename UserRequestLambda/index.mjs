@@ -21,6 +21,9 @@ const getSecrets = async () => {
 
 // Lambda function handler
 export const handler = async (event) => {
+  console.log('Received event:', JSON.stringify(event, null, 2))
+
+
   try {
     // Retrieve secrets if not already loaded
     await getSecrets();
@@ -30,7 +33,7 @@ export const handler = async (event) => {
       apiKey: openaiApiKey,
     });
 
-    const { prompt } = event;
+    const prompt = JSON.parse(event.body).prompt;
 
     if (!prompt) {
       return {

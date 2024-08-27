@@ -22,10 +22,9 @@ const getSecrets = async () => {
 
 // Lambda function handler for the /generate route
 export const handler = async (event) => {
-
-  console.log("LOOK HERE", event);
-  const connectionId = event.requestContext.connectionId;
   console.log("Received event:", JSON.stringify(event, null, 2));
+
+  const { action, prompt } = event;
 
   try {
     // Retrieve secrets if not already loaded
@@ -36,7 +35,12 @@ export const handler = async (event) => {
       apiKey: openaiApiKey,
     });
 
-    const prompt = JSON.parse(event.body).prompt;
+    if (action !== "search") {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "Incorrect action specified." }),
+      };
+    }
 
     if (!prompt) {
       return {

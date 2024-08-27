@@ -5,7 +5,7 @@ import OpenAI from "openai";
 
 const secretsManager = new AWS.SecretsManager();
 const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
-  endpoint: process.env.WEBSOCKET_ENDPOINT,
+  endpoint: 'https://1wykr5nss2.execute-api.us-east-1.amazonaws.com/development'
 });
 
 let openaiApiKey;

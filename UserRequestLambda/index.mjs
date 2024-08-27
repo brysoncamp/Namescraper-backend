@@ -22,6 +22,8 @@ const getSecrets = async () => {
 
 // Lambda function handler for the /generate route
 export const handler = async (event) => {
+
+  console.log("LOOK HERE", event);
   const connectionId = event.requestContext.connectionId;
   console.log("Received event:", JSON.stringify(event, null, 2));
 

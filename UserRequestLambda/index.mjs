@@ -1,28 +1,29 @@
+// wss://1wykr5nss2.execute-api.us-east-1.amazonaws.com/development/
+
 import AWS from "aws-sdk";
 import OpenAI from "openai";
 
 const secretsManager = new AWS.SecretsManager();
-const sqs = new AWS.SQS();
+const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
+  endpoint: process.env.WEBSOCKET_ENDPOINT,
+});
 
 let openaiApiKey;
-let queueUrl;
 
-// Function to retrieve secrets from Secrets Manager
 const getSecrets = async () => {
-  if (!openaiApiKey || !queueUrl) {
+  if (!openaiApiKey) {
     const secret = await secretsManager
       .getSecretValue({ SecretId: "UserRequestSecrets" })
       .promise();
     const secretValues = JSON.parse(secret.SecretString);
     openaiApiKey = secretValues.OPENAI_API_KEY;
-    queueUrl = secretValues.SQS_QUEUE_URL;
   }
 };
 
-// Lambda function handler
+// Lambda function handler for /generate route
 export const handler = async (event) => {
-  console.log('Received event:', JSON.stringify(event, null, 2))
-
+  const connectionId = event.requestContext.connectionId;
+  console.log("Received event:", JSON.stringify(event, null, 2));
 
   try {
     // Retrieve secrets if not already loaded
@@ -42,8 +43,8 @@ export const handler = async (event) => {
       };
     }
 
-    // Query GPT-4o-mini to generate domain names
-    const completion = await openai.chat.completions.create({
+    // Start the streaming request
+    const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini", // Use the correct model name
       messages: [
         {
@@ -53,34 +54,31 @@ export const handler = async (event) => {
         },
         { role: "user", content: prompt },
       ],
+      stream: true, // Enable streaming mode
     });
 
-    // Process the generated names
-    const names = completion.choices[0].message.content
-      .trim()
-      .split("\n")
-      .map((name) => name.trim());
-    const uniqueNames = [...new Set(names)]; // Remove duplicates
+    // Process the stream
+    for await (const chunk of stream) {
+      const content = chunk.choices[0].delta?.content || ""; // Get the content chunk
+      await apiGatewayManagementApi
+        .postToConnection({
+          ConnectionId: connectionId,
+          Data: JSON.stringify({ content }),
+        })
+        .promise();
+    }
 
-    /*
-    // Push the generated names to the SQS queue
-    const sqsResponse = await sqs
-      .sendMessage({
-        QueueUrl: queueUrl,
-        MessageBody: JSON.stringify({ names: uniqueNames }),
+    // Final message to indicate completion
+    await apiGatewayManagementApi
+      .postToConnection({
+        ConnectionId: connectionId,
+        Data: JSON.stringify({ message: "Complete" }),
       })
-      .promise();*/
+      .promise();
 
-    // Return a successful response
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: "Names generated and sent to queue successfully.",
-        sqsResponse,
-      }),
-    };
+    return { statusCode: 200, body: "Data streamed successfully." };
   } catch (error) {
-    console.error("Error querying GPT or pushing to queue:", error);
+    console.error("Error processing request:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({
@@ -90,6 +88,3 @@ export const handler = async (event) => {
     };
   }
 };
-
-// Access key: AKIAQKPIMCL6L2UKAVP6
-// Secret Access key: 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

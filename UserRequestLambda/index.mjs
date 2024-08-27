@@ -62,13 +62,14 @@ export const handler = async (event) => {
       .map((name) => name.trim());
     const uniqueNames = [...new Set(names)]; // Remove duplicates
 
+    /*
     // Push the generated names to the SQS queue
     const sqsResponse = await sqs
       .sendMessage({
         QueueUrl: queueUrl,
         MessageBody: JSON.stringify({ names: uniqueNames }),
       })
-      .promise();
+      .promise();*/
 
     // Return a successful response
     return {

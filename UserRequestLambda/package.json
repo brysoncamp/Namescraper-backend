@@ -1,7 +1,9 @@
 {
   "name": "namescraper-backend",
   "version": "1.0.0",
-  "main": "hello.js",
+  "description": "",
+  "type": "module",
+  "main": "index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,7 +19,7 @@
   },
   "homepage": "https://github.com/brysoncamp/Namescraper-backend#readme",
   "dependencies": {
-    "aws-sdk": "^2.1683.0"
-  },
-  "description": ""
+    "aws-sdk": "^2.1683.0",
+    "openai": "^4.56.0"
+  }
 }

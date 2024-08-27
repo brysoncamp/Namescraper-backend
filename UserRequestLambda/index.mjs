@@ -4,7 +4,7 @@ import OpenAI from "openai";
 // Initialize Secrets Manager and API Gateway Management API
 const secretsManager = new AWS.SecretsManager();
 const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
-  endpoint: "https://1wykr5nss2.execute-api.us-east-1.amazonaws.com/development/generate",
+  endpoint: "https://1wykr5nss2.execute-api.us-east-1.amazonaws.com/development",
 });
 
 let openaiApiKey;

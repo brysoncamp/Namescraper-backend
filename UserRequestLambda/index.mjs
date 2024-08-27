@@ -1,15 +1,16 @@
-// wss://1wykr5nss2.execute-api.us-east-1.amazonaws.com/development/
-
 import AWS from "aws-sdk";
 import OpenAI from "openai";
 
+// Initialize Secrets Manager and API Gateway Management API
 const secretsManager = new AWS.SecretsManager();
 const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
-  endpoint: 'https://1wykr5nss2.execute-api.us-east-1.amazonaws.com/development'
+  endpoint:
+    "https://1wykr5nss2.execute-api.us-east-1.amazonaws.com/development",
 });
 
 let openaiApiKey;
 
+// Function to retrieve secrets from Secrets Manager
 const getSecrets = async () => {
   if (!openaiApiKey) {
     const secret = await secretsManager
@@ -20,7 +21,7 @@ const getSecrets = async () => {
   }
 };
 
-// Lambda function handler for /generate route
+// Lambda function handler for the /generate route
 export const handler = async (event) => {
   const connectionId = event.requestContext.connectionId;
   console.log("Received event:", JSON.stringify(event, null, 2));
@@ -57,7 +58,7 @@ export const handler = async (event) => {
       stream: true, // Enable streaming mode
     });
 
-    // Process the stream
+    // Process the stream and send each chunk to the client
     for await (const chunk of stream) {
       const content = chunk.choices[0].delta?.content || ""; // Get the content chunk
       await apiGatewayManagementApi
@@ -68,7 +69,7 @@ export const handler = async (event) => {
         .promise();
     }
 
-    // Final message to indicate completion
+    // Send a final message to indicate completion
     await apiGatewayManagementApi
       .postToConnection({
         ConnectionId: connectionId,
